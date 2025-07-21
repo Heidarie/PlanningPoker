@@ -55,7 +55,7 @@ func init() {
 	clientSecret = os.Getenv("CLIENT_SECRET")
 	if clientSecret == "" {
 		log.Println("Warning: CLIENT_SECRET not set, using default (not secure for production)")
-		clientSecret = "planning-poker-secure-key-2025"
+		clientSecret = "dev-secret-key-planning-poker"
 	}
 }
 
