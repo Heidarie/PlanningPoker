@@ -81,7 +81,6 @@ PlanningPoker/
    - `CLIENT_SECRET`: Your production secret
    - `SERVER_URL`: Your Vercel app URL (optional)
    - `VERCEL_TOKEN`: From Vercel account settings
-   - `VERCEL_ORG_ID`: From Vercel team settings  
    - `VERCEL_PROJECT_ID`: From Vercel project settings
 
 3. **Deploy Everything**:

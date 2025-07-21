@@ -119,9 +119,8 @@ vercel env add SERVER_URL
    - Add `CLIENT_SECRET` with your production secret key
    - Add `SERVER_URL` with your Vercel deployment URL (optional)
    
-   **For Vercel Auto-Deployment:**
+   **For Vercel Auto-Deployment (Hobby Tier):**
    - Add `VERCEL_TOKEN` (get from https://vercel.com/account/tokens)
-   - Add `VERCEL_ORG_ID` (found in your Vercel team settings)
    - Add `VERCEL_PROJECT_ID` (found in your Vercel project settings)
 
 4. **Deploy and build automatically**:

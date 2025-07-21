@@ -1,6 +1,6 @@
 # Vercel Setup Guide
 
-## 🚀 Setting up Automatic Vercel Deployment
+## 🚀 Setting up Automatic Vercel Deployment (Hobby Tier)
 
 ### Step 1: Get Vercel Token
 1. Go to [Vercel Account Settings](https://vercel.com/account/tokens)
@@ -8,30 +8,25 @@
 3. Name it "GitHub Actions Deploy"
 4. Copy the token (save it for GitHub Secrets)
 
-### Step 2: Get Organization ID
-1. Go to your Vercel dashboard
-2. Click on your team/organization name in the top left
-3. Go to "Settings" → "General"
-4. Copy the "Team ID" (this is your ORG_ID)
-
-### Step 3: Get Project ID
+### Step 2: Get Project ID
 1. Go to your Vercel project dashboard
 2. Click "Settings" → "General"
 3. Copy the "Project ID"
 
-### Step 4: Configure GitHub Secrets
+### Step 3: Configure GitHub Secrets
 Go to your GitHub repository → Settings → Secrets and variables → Actions
 
 Add these secrets:
 ```
 VERCEL_TOKEN=your_vercel_token_here
-VERCEL_ORG_ID=your_team_id_here
 VERCEL_PROJECT_ID=your_project_id_here
 CLIENT_SECRET=your_secure_secret_key_here
 SERVER_URL=https://your-app.vercel.app (optional)
 ```
 
-### Step 5: Test the Deployment
+**Note**: For Vercel hobby tier, you don't need `VERCEL_ORG_ID` since personal accounts don't have organizations.
+
+### Step 4: Test the Deployment
 ```bash
 # Create and push a tag to trigger deployment
 git tag v1.0.0
