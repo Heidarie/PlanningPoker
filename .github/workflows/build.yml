@@ -40,8 +40,13 @@ jobs:
         # Set up environment variables for Vercel
         CLIENT_SECRET_VALUE="${{ secrets.CLIENT_SECRET }}"
         if [ -z "$CLIENT_SECRET_VALUE" ]; then
-          CLIENT_SECRET_VALUE="dev-secret-key-planning-poker"
-          echo "⚠️  Using development CLIENT_SECRET for Vercel deployment"
+          echo "❌ ERROR: CLIENT_SECRET is required but not set in GitHub secrets"
+          echo "Please add CLIENT_SECRET to your GitHub repository secrets:"
+          echo "1. Go to Settings → Secrets and variables → Actions"
+          echo "2. Click 'New repository secret'"
+          echo "3. Name: CLIENT_SECRET"
+          echo "4. Value: Your secure secret key (e.g., pk_live_abc123...)"
+          exit 1
         fi
         
         echo "🔧 Setting up Vercel environment variables..."
@@ -119,8 +124,11 @@ jobs:
         CLIENT_SECRET="${{ env.CLIENT_SECRET }}"
         
         if [ -z "$CLIENT_SECRET" ]; then
-          CLIENT_SECRET="dev-secret-key-planning-poker"
-          echo "⚠️  Using development CLIENT_SECRET (production builds require GitHub secret)"
+          echo "❌ ERROR: CLIENT_SECRET is required for production builds"
+          echo "Please add CLIENT_SECRET to your GitHub repository secrets"
+          exit 1
+        else
+          echo "✅ CLIENT_SECRET is configured for production build"
         fi
         
         if [ -z "$SERVER_URL" ]; then

@@ -27,12 +27,12 @@ func init() {
 	// Load .env file if it exists (ignore error if file doesn't exist)
 	_ = godotenv.Load()
 
-	// Get client secret from environment or use default for development
+	// Get client secret from environment - REQUIRED for security
 	clientSecret = os.Getenv("CLIENT_SECRET")
 	if clientSecret == "" {
-		log.Println("Warning: CLIENT_SECRET not set, using default (not secure for production)")
-		clientSecret = "dev-secret-key-planning-poker"
+		log.Fatal("ERROR: CLIENT_SECRET environment variable is required and not set. Please set CLIENT_SECRET in your .env file or environment.")
 	}
+	log.Printf("Server initialized with CLIENT_SECRET (length: %d)", len(clientSecret))
 }
 
 func getSecretKey() string {

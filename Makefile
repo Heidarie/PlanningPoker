@@ -6,7 +6,10 @@ endif
 
 # Default values
 SERVER_URL ?= http://localhost:8080
-CLIENT_SECRET ?= dev-secret-key-planning-poker
+# CLIENT_SECRET must be provided - no default for security
+ifndef CLIENT_SECRET
+$(error CLIENT_SECRET environment variable is required. Please set it in your .env file or environment)
+endif
 
 # Build flags
 BUILD_FLAGS = -ldflags="-s -w"

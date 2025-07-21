@@ -30,7 +30,7 @@ func init() {
 
 	// Set default values
 	SERVER_URL = getEnv("SERVER_URL", "https://planning-poker-secure.vercel.app")
-	CLIENT_SECRET = getEnv("CLIENT_SECRET", "dev-secret-key-planning-poker")
+	CLIENT_SECRET = getEnv("CLIENT_SECRET", "")
 	DEV_MODE = getEnv("DEV_MODE", "false") == "true"
 
 	if DEV_MODE {

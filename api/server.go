@@ -51,12 +51,12 @@ var (
 )
 
 func init() {
-	// Get client secret from environment or use default for development
+	// Get client secret from environment - REQUIRED for security
 	clientSecret = os.Getenv("CLIENT_SECRET")
 	if clientSecret == "" {
-		log.Println("Warning: CLIENT_SECRET not set, using default (not secure for production)")
-		clientSecret = "dev-secret-key-planning-poker"
+		log.Fatal("ERROR: CLIENT_SECRET environment variable is required and not set. Deployment failed for security reasons.")
 	}
+	log.Printf("Server initialized with CLIENT_SECRET (length: %d)", len(clientSecret))
 }
 
 // Client methods
