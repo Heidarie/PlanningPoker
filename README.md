@@ -114,17 +114,27 @@ vercel env add CLIENT_SECRET
 vercel env add SERVER_URL
 ```
 
-3. **Configure GitHub Secrets** (for automated releases):
+3. **Configure GitHub Secrets** (for automated deployment & releases):
    - Go to your repository settings → Secrets and variables → Actions
    - Add `CLIENT_SECRET` with your production secret key
    - Add `SERVER_URL` with your Vercel deployment URL (optional)
+   
+   **For Vercel Auto-Deployment:**
+   - Add `VERCEL_TOKEN` (get from https://vercel.com/account/tokens)
+   - Add `VERCEL_ORG_ID` (found in your Vercel team settings)
+   - Add `VERCEL_PROJECT_ID` (found in your Vercel project settings)
 
-4. **Deploy and build**:
+4. **Deploy and build automatically**:
 ```bash
-# Push a tag to trigger GitHub Actions build
+# Push a tag to trigger automatic Vercel deployment + GitHub releases
 git tag v1.0.0
 git push origin v1.0.0
 ```
+
+This will:
+- Deploy the server to Vercel with production settings
+- Build secure client binaries for all platforms
+- Create a GitHub release with pre-configured binaries
 
 ### Building from Source
 

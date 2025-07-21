@@ -11,7 +11,22 @@ env:
   CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
 
 jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to Vercel
+      uses: amondnet/vercel-action@v25
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        vercel-args: '--prod'
+        working-directory: ./
+
   build:
+    needs: deploy
     runs-on: ubuntu-latest
     
     strategy:
@@ -91,6 +106,7 @@ jobs:
           - 👥 Real-time participant tracking
           - 🔒 Vote locking system
           - 🧹 Automatic room cleanup
+          - ☁️ **Server automatically deployed to Vercel**
           
           ### Download Instructions
           1. Download the appropriate binary for your system
@@ -98,7 +114,7 @@ jobs:
           3. Run the application: `./planning_poker_secure_*`
           
           **Note**: This release has the server URL and authentication pre-configured.
-          No additional setup is required!
+          The server is automatically deployed and ready to use!
           
           ### Supported Platforms
           - Windows (amd64)
@@ -107,5 +123,6 @@ jobs:
           
           ### Security
           This release includes authentication and rate limiting for secure usage.
+          Server deployed with production security settings.
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

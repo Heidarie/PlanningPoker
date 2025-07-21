@@ -18,7 +18,7 @@
 
 ### 🚀 Deployment Pipeline
 - **GitHub Actions**: Automated builds for multiple platforms
-- **Vercel Integration**: Serverless deployment with environment variables
+- **Vercel Integration**: Automatic serverless deployment on tag push
 - **Cross-platform Builds**: Windows, Linux, macOS (amd64, arm64)
 - **Secure Releases**: Pre-configured binaries with embedded secrets
 
@@ -70,27 +70,31 @@ PlanningPoker/
 
 ## 🎯 Next Steps
 
-1. **Deploy to Vercel**:
+1. **Setup Vercel Integration**:
    ```bash
-   vercel --prod
-   vercel env add CLIENT_SECRET
+   # Get your Vercel credentials
+   vercel login
+   vercel link  # Link to your project
    ```
 
-2. **Set GitHub Secrets**:
+2. **Configure GitHub Secrets**:
    - `CLIENT_SECRET`: Your production secret
-   - `SERVER_URL`: Your Vercel app URL
+   - `SERVER_URL`: Your Vercel app URL (optional)
+   - `VERCEL_TOKEN`: From Vercel account settings
+   - `VERCEL_ORG_ID`: From Vercel team settings  
+   - `VERCEL_PROJECT_ID`: From Vercel project settings
 
-3. **Create Release**:
+3. **Deploy Everything**:
    ```bash
    git tag v1.0.0
    git push origin v1.0.0
    ```
 
-4. **Test End-to-End**:
-   - Download release binary
-   - Test room creation and joining
-   - Verify authentication works
-   - Check rate limiting behavior
+4. **Automatic Process**:
+   - ✅ Server deploys to Vercel
+   - ✅ Client binaries build with embedded config
+   - ✅ GitHub release created with downloads
+   - ✅ Everything ready for users!
 
 ## 🔒 Security Considerations
 
