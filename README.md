@@ -19,12 +19,12 @@ git clone https://github.com/Heidarie/PlanningPoker.git
 cd PlanningPoker
 make build
 ```
-This will generate server.exe and cli_planning_poker.exe in the root directory.
+This will generate server.exe and cli_planning_poker.exe and server.exe in the root directory.
 
 Alternatively run
 ```
-go build /src/server -o /<your_name>.exe
-go build /src/client -o /<your_name>.exe
+go build /cmd/server -o /<your_name>.exe
+go build /cmd/client -o /<your_name>.exe
 ```
 ### Run the Server
 ```
