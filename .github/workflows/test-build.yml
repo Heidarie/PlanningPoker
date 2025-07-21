@@ -1,0 +1,61 @@
+name: Test Build Only
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+env:
+  SERVER_URL: 'http://localhost:8080'
+  CLIENT_SECRET: 'dev-secret-key-planning-poker'
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        goos: [windows, linux]
+        goarch: [amd64]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+    
+    - name: Get dependencies
+      run: go mod download
+    
+    - name: Test build with embedded config
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+        CGO_ENABLED: 0
+      run: |
+        VERSION="test-${{ github.sha }}"
+        COMMIT=${GITHUB_SHA::8}
+        DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        
+        LDFLAGS="-s -w -X main.BuildServerURL=${{ env.SERVER_URL }} -X main.BuildClientSecret=${{ env.CLIENT_SECRET }} -X main.BuildVersion=${VERSION} -X main.BuildCommit=${COMMIT} -X main.BuildDate=${DATE}"
+        
+        echo "🔧 Test build configuration:"
+        echo "  Version: ${VERSION}"
+        echo "  Server URL: ${{ env.SERVER_URL }}"
+        echo "  Platform: ${{ matrix.goos }}/${{ matrix.goarch }}"
+        
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          go build -ldflags="${LDFLAGS}" -o planning_poker_test_${{ matrix.goos }}_${{ matrix.goarch }}.exe ./cmd/client
+          ls -la planning_poker_test_${{ matrix.goos }}_${{ matrix.goarch }}.exe
+        else
+          go build -ldflags="${LDFLAGS}" -o planning_poker_test_${{ matrix.goos }}_${{ matrix.goarch }} ./cmd/client
+          ls -la planning_poker_test_${{ matrix.goos }}_${{ matrix.goarch }}
+        fi
+    
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: test_planning_poker_${{ matrix.goos }}_${{ matrix.goarch }}
+        path: planning_poker_test_*

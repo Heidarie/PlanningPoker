@@ -121,7 +121,6 @@ vercel env add SERVER_URL
    
    **For Vercel Auto-Deployment (Hobby Tier):**
    - Add `VERCEL_TOKEN` (get from https://vercel.com/account/tokens)
-   - Add `VERCEL_PROJECT_ID` (found in your Vercel project settings)
 
 4. **Deploy and build automatically**:
 ```bash
