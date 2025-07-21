@@ -390,10 +390,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	router.HandleFunc("/ws", wsHandler)
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		status := map[string]interface{}{
-			"status": "OK",
+			"status":    "OK",
 			"timestamp": time.Now().UTC().Format(time.RFC3339),
 		}
-		
+
 		// Check if CLIENT_SECRET is configured
 		if clientSecret == "" {
 			status["client_secret"] = "NOT_CONFIGURED"
@@ -402,7 +402,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			status["client_secret"] = "CONFIGURED"
 			status["client_secret_length"] = len(clientSecret)
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(status)
