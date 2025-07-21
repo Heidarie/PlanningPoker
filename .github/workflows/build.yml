@@ -49,17 +49,11 @@ jobs:
           exit 1
         fi
         
-        echo "🔧 Setting up Vercel secrets..."
+        echo "🔧 Setting up Vercel environment variables..."
         
-        # Add secret to Vercel project (secrets work better than env vars for serverless)
-        echo "$CLIENT_SECRET_VALUE" | vercel secrets add client_secret --token ${{ secrets.VERCEL_TOKEN }} || echo "Secret may already exist, attempting to update..."
-        
-        # If adding failed, try to remove and recreate
-        if [ $? -ne 0 ]; then
-          echo "Updating existing secret..."
-          vercel secrets rm client_secret --token ${{ secrets.VERCEL_TOKEN }} --yes || true
-          echo "$CLIENT_SECRET_VALUE" | vercel secrets add client_secret --token ${{ secrets.VERCEL_TOKEN }}
-        fi
+        # Add environment variable to Vercel project
+        echo "Setting CLIENT_SECRET in Vercel (length: ${#CLIENT_SECRET_VALUE})"
+        echo "$CLIENT_SECRET_VALUE" | vercel env add CLIENT_SECRET production --token ${{ secrets.VERCEL_TOKEN }} || echo "Environment variable may already exist"
         
         # Deploy using Vercel CLI for personal accounts
         echo "🚀 Deploying to Vercel..."

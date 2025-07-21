@@ -280,9 +280,16 @@ func getSecretKey() string {
 }
 
 func authenticateClient(r *http.Request) bool {
-	clientSecret := r.Header.Get("X-Client-Secret")
+	receivedSecret := r.Header.Get("X-Client-Secret")
 	expectedSecret := getSecretKey()
-	return subtle.ConstantTimeCompare([]byte(clientSecret), []byte(expectedSecret)) == 1
+	
+	// Debug logging
+	log.Printf("Auth attempt - Expected length: %d, Received length: %d", len(expectedSecret), len(receivedSecret))
+	if len(expectedSecret) > 8 && len(receivedSecret) > 8 {
+		log.Printf("Expected prefix: %s..., Received prefix: %s...", expectedSecret[:8], receivedSecret[:8])
+	}
+	
+	return subtle.ConstantTimeCompare([]byte(receivedSecret), []byte(expectedSecret)) == 1
 }
 
 func rateLimitCheck(ip string) bool {
