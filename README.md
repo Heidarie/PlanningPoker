@@ -46,8 +46,6 @@ go build /src/client -o /<your_name>.exe
 5. Host starts the voting round.
 6. Each participant selects an estimate.
 7. Results are displayed after all votes are in.
-Download
-You can always find the latest Windows executable here:
 
 ## Download
 
