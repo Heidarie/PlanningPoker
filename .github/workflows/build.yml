@@ -60,9 +60,13 @@ jobs:
     
     - name: Validate secrets
       run: |
-        if [ -z "${{ env.CLIENT_SECRET }}" ]; then
-          echo "Error: CLIENT_SECRET is not set in repository secrets"
-          exit 1
+        if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
+          if [ -z "${{ env.CLIENT_SECRET }}" ]; then
+            echo "Error: CLIENT_SECRET is required for tag builds"
+            exit 1
+          fi
+        else
+          echo "Non-tag build: CLIENT_SECRET validation skipped"
         fi
     
     - name: Build client with embedded config
@@ -72,17 +76,51 @@ jobs:
         CGO_ENABLED: 0
       run: |
         # Get version info
-        VERSION=${GITHUB_REF#refs/tags/}
+        if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
+          VERSION=${GITHUB_REF#refs/tags/}
+        else
+          VERSION="dev-${{ github.sha }}"
+        fi
         COMMIT=${GITHUB_SHA::8}
         DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
         
-        # Create build-time configuration
-        BUILD_FLAGS="-ldflags=-s -w -X 'main.BuildServerURL=${{ env.SERVER_URL }}' -X 'main.BuildClientSecret=${{ env.CLIENT_SECRET }}' -X 'main.BuildVersion=${VERSION}' -X 'main.BuildCommit=${COMMIT}' -X 'main.BuildDate=${DATE}'"
+        # Set default values for development builds
+        SERVER_URL="${{ env.SERVER_URL }}"
+        CLIENT_SECRET="${{ env.CLIENT_SECRET }}"
         
+        if [ -z "$CLIENT_SECRET" ]; then
+          CLIENT_SECRET="dev-secret-key-planning-poker"
+          echo "⚠️  Using development CLIENT_SECRET (production builds require GitHub secret)"
+        fi
+        
+        if [ -z "$SERVER_URL" ]; then
+          SERVER_URL="http://localhost:8080"
+          echo "⚠️  Using development SERVER_URL"
+        fi
+        
+        # Create build-time configuration
+        BUILD_FLAGS="-ldflags=-s -w -X 'main.BuildServerURL=${SERVER_URL}' -X 'main.BuildClientSecret=${CLIENT_SECRET}' -X 'main.BuildVersion=${VERSION}' -X 'main.BuildCommit=${COMMIT}' -X 'main.BuildDate=${DATE}'"
+        
+        echo "🔧 Building with configuration:"
+        echo "  Version: ${VERSION}"
+        echo "  Server URL: ${SERVER_URL}"
+        echo "  Client Secret: $(echo ${CLIENT_SECRET} | cut -c1-8)..."
+        echo "  Platform: ${{ matrix.goos }}/${{ matrix.goarch }}"
+        
+        echo "🏗️  Starting Go build..."
         if [ "${{ matrix.goos }}" = "windows" ]; then
           go build $BUILD_FLAGS -o planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}.exe ./cmd/client
+          echo "✅ Built: planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}.exe"
         else
           go build $BUILD_FLAGS -o planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }} ./cmd/client
+          echo "✅ Built: planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}"
+        fi
+        
+        # Verify the binary was created
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          ls -la planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}.exe
+        else
+          ls -la planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}
         fi
     
     - name: Upload artifacts
