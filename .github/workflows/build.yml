@@ -33,14 +33,32 @@ jobs:
         # Install Vercel CLI
         npm i -g vercel
         
+        # Set up environment variables for Vercel
+        CLIENT_SECRET_VALUE="${{ secrets.CLIENT_SECRET }}"
+        if [ -z "$CLIENT_SECRET_VALUE" ]; then
+          CLIENT_SECRET_VALUE="dev-secret-key-planning-poker"
+          echo "⚠️  Using development CLIENT_SECRET for Vercel deployment"
+        fi
+        
+        echo "🔧 Setting up Vercel secrets..."
+        
+        # Create/update the secret in Vercel
+        echo "$CLIENT_SECRET_VALUE" | vercel secrets add client_secret --token ${{ secrets.VERCEL_TOKEN }} || echo "Secret may already exist, attempting to update..."
+        
+        # If creation failed, try to remove and recreate
+        if [ $? -ne 0 ]; then
+          echo "Updating existing secret..."
+          vercel secrets rm client_secret --token ${{ secrets.VERCEL_TOKEN }} --yes || true
+          echo "$CLIENT_SECRET_VALUE" | vercel secrets add client_secret --token ${{ secrets.VERCEL_TOKEN }}
+        fi
+        
         # Deploy using Vercel CLI for personal accounts
         echo "🚀 Deploying to Vercel..."
         
         # Deploy to Vercel (will prompt to link project if needed)
-        vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes --confirm
+        vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        CLIENT_SECRET: ${{ secrets.CLIENT_SECRET || 'dev-secret-key-planning-poker' }}
 
   build:
     runs-on: ubuntu-latest
