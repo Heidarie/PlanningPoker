@@ -8,6 +8,10 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+  packages: write
+
 env:
   SERVER_URL: ${{ secrets.SERVER_URL || 'https://planning-poker-secure.vercel.app' }}
   CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
