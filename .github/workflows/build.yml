@@ -16,7 +16,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     # Only run if we have Vercel token
-    if: (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')) && secrets.VERCEL_TOKEN != ''
+    if: (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')) && ${{ secrets.VERCEL_TOKEN }} != ''
     steps:
     - uses: actions/checkout@v4
     
