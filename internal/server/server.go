@@ -15,18 +15,18 @@ import (
 )
 
 var (
-	rooms       = make(map[string]*Room)
-	roomsMu     sync.RWMutex
-	upgrader    = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
-	rateLimiter = make(map[string]time.Time)
-	rateMu      sync.RWMutex
+	rooms        = make(map[string]*Room)
+	roomsMu      sync.RWMutex
+	upgrader     = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
+	rateLimiter  = make(map[string]time.Time)
+	rateMu       sync.RWMutex
 	clientSecret string
 )
 
 func init() {
 	// Load .env file if it exists (ignore error if file doesn't exist)
 	_ = godotenv.Load()
-	
+
 	// Get client secret from environment or use default for development
 	clientSecret = os.Getenv("CLIENT_SECRET")
 	if clientSecret == "" {
@@ -42,7 +42,7 @@ func getSecretKey() string {
 func authenticateClient(r *http.Request) bool {
 	clientSecret := r.Header.Get("X-Client-Secret")
 	expectedSecret := getSecretKey()
-	
+
 	// Use constant-time comparison to prevent timing attacks
 	return subtle.ConstantTimeCompare([]byte(clientSecret), []byte(expectedSecret)) == 1
 }
@@ -50,7 +50,7 @@ func authenticateClient(r *http.Request) bool {
 func rateLimitCheck(ip string) bool {
 	rateMu.Lock()
 	defer rateMu.Unlock()
-	
+
 	if lastReq, exists := rateLimiter[ip]; exists {
 		if time.Since(lastReq) < time.Second { // 1 request per second per IP
 			return false
@@ -63,7 +63,7 @@ func rateLimitCheck(ip string) bool {
 func cleanupRateLimit() {
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		rateMu.Lock()
 		for ip, lastReq := range rateLimiter {
@@ -81,7 +81,7 @@ func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	
+
 	// Rate limiting
 	clientIP := r.Header.Get("X-Forwarded-For")
 	if clientIP == "" {
@@ -91,7 +91,7 @@ func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
 		return
 	}
-	
+
 	code := randCode(4)
 	room := NewRoom(code)
 	roomsMu.Lock()
@@ -107,7 +107,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	
+
 	// Rate limiting
 	clientIP := r.Header.Get("X-Forwarded-For")
 	if clientIP == "" {
@@ -117,7 +117,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
 		return
 	}
-	
+
 	code := r.URL.Query().Get("code")
 	name := r.URL.Query().Get("name")
 	mode := r.URL.Query().Get("mode")
@@ -199,7 +199,7 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	}).Methods("GET")
-	
+
 	// Handle the request
 	router.ServeHTTP(w, r)
 }
@@ -212,13 +212,13 @@ func Run(addr string) {
 	r := mux.NewRouter()
 	r.HandleFunc("/create", createRoomHandler).Methods("POST")
 	r.HandleFunc("/ws", wsHandler)
-	
+
 	// Health check endpoint for Vercel
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	}).Methods("GET")
-	
+
 	log.Printf("Server listening on %s", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		log.Fatal("Server run error")
