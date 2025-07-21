@@ -37,6 +37,10 @@ jobs:
         # Install Vercel CLI
         npm i -g vercel
         
+        # Link the project to Vercel (this will create .vercel directory)
+        echo "🔗 Linking project to Vercel..."
+        vercel link --token ${{ secrets.VERCEL_TOKEN }} --yes
+        
         # Set up environment variables for Vercel
         CLIENT_SECRET_VALUE="${{ secrets.CLIENT_SECRET }}"
         if [ -z "$CLIENT_SECRET_VALUE" ]; then
