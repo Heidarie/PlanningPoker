@@ -54,9 +54,13 @@ func init() {
 	// Get client secret from environment - REQUIRED for security
 	clientSecret = os.Getenv("CLIENT_SECRET")
 	if clientSecret == "" {
-		log.Fatal("ERROR: CLIENT_SECRET environment variable is required and not set. Deployment failed for security reasons.")
+		// For serverless functions, we can't use log.Fatal as it crashes the function
+		// Instead, we'll set a flag and handle it in the request handler
+		log.Printf("WARNING: CLIENT_SECRET environment variable not set - authentication will fail")
+		clientSecret = "" // Keep it empty to fail authentication
+	} else {
+		log.Printf("Server initialized with CLIENT_SECRET (length: %d)", len(clientSecret))
 	}
-	log.Printf("Server initialized with CLIENT_SECRET (length: %d)", len(clientSecret))
 }
 
 // Client methods
@@ -385,8 +389,23 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	router.HandleFunc("/create", createRoomHandler).Methods("POST")
 	router.HandleFunc("/ws", wsHandler)
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		status := map[string]interface{}{
+			"status": "OK",
+			"timestamp": time.Now().UTC().Format(time.RFC3339),
+		}
+		
+		// Check if CLIENT_SECRET is configured
+		if clientSecret == "" {
+			status["client_secret"] = "NOT_CONFIGURED"
+			status["warning"] = "CLIENT_SECRET environment variable not set - authentication will fail"
+		} else {
+			status["client_secret"] = "CONFIGURED"
+			status["client_secret_length"] = len(clientSecret)
+		}
+		
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		json.NewEncoder(w).Encode(status)
 	}).Methods("GET")
 
 	router.ServeHTTP(w, r)
