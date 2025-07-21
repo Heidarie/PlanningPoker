@@ -40,22 +40,15 @@ jobs:
           echo "⚠️  Using development CLIENT_SECRET for Vercel deployment"
         fi
         
-        echo "🔧 Setting up Vercel secrets..."
+        echo "🔧 Setting up Vercel environment variables..."
         
-        # Create/update the secret in Vercel
-        echo "$CLIENT_SECRET_VALUE" | vercel secrets add client_secret --token ${{ secrets.VERCEL_TOKEN }} || echo "Secret may already exist, attempting to update..."
-        
-        # If creation failed, try to remove and recreate
-        if [ $? -ne 0 ]; then
-          echo "Updating existing secret..."
-          vercel secrets rm client_secret --token ${{ secrets.VERCEL_TOKEN }} --yes || true
-          echo "$CLIENT_SECRET_VALUE" | vercel secrets add client_secret --token ${{ secrets.VERCEL_TOKEN }}
-        fi
+        # Add environment variable to Vercel project
+        echo "$CLIENT_SECRET_VALUE" | vercel env add CLIENT_SECRET production --token ${{ secrets.VERCEL_TOKEN }} || echo "Environment variable may already exist"
         
         # Deploy using Vercel CLI for personal accounts
         echo "🚀 Deploying to Vercel..."
         
-        # Deploy to Vercel (will prompt to link project if needed)
+        # Deploy to Vercel
         vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

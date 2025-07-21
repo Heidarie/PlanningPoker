@@ -9,8 +9,5 @@
       "src": "/(.*)",
       "dest": "/api/server.go"
     }
-  ],
-  "env": {
-    "CLIENT_SECRET": "@client_secret"
-  }
+  ]
 }
