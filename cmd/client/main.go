@@ -18,6 +18,15 @@ import (
 	"github.com/heidarie/cli_planning_poker/internal/client"
 )
 
+// Build-time variables (injected via -ldflags)
+var (
+	BuildServerURL    string
+	BuildClientSecret string
+	BuildVersion      = "dev"
+	BuildCommit       = "unknown"
+	BuildDate         = "unknown"
+)
+
 // Menu states
 const (
 	menuMain = iota
@@ -221,10 +230,26 @@ func (m menuModel) View() string {
 // Commands
 func createRoom(serverAddr string) tea.Cmd {
 	return func() tea.Msg {
-		resp, err := http.Post(serverAddr+"/create", "", nil)
+		httpClient := &http.Client{}
+		req, err := http.NewRequest("POST", serverAddr+"/create", nil)
 		if err != nil {
 			return connectionErrorMsg{err}
 		}
+		
+		// Add authentication header
+		req.Header.Set("X-Client-Secret", client.CLIENT_SECRET)
+		
+		resp, err := httpClient.Do(req)
+		if err != nil {
+			return connectionErrorMsg{err}
+		}
+		defer resp.Body.Close()
+		
+		if resp.StatusCode != http.StatusOK {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			return connectionErrorMsg{fmt.Errorf("server error: %s", string(bodyBytes))}
+		}
+		
 		body, _ := io.ReadAll(resp.Body)
 		return roomCreatedMsg{roomCode: string(body)}
 	}
@@ -232,10 +257,17 @@ func createRoom(serverAddr string) tea.Cmd {
 
 func connectToRoom(serverAddr, roomCode, playerName, mode string) tea.Cmd {
 	return func() tea.Msg {
-		wsURL := strings.Replace(serverAddr, "http://", "ws://", 1) + "/ws?code=" +
-			url.QueryEscape(roomCode) + "&name=" + url.QueryEscape(playerName) + "&mode=" + url.QueryEscape(mode)
+		// Convert HTTP(S) to WS(S)
+		wsURL := strings.Replace(serverAddr, "https://", "wss://", 1)
+		wsURL = strings.Replace(wsURL, "http://", "ws://", 1)
+		wsURL += "/ws?code=" + url.QueryEscape(roomCode) + "&name=" + url.QueryEscape(playerName) + "&mode=" + url.QueryEscape(mode)
+		
+		// WebSocket doesn't support custom headers during handshake easily with gorilla/websocket
+		// So we need to use a custom dialer with headers
+		headers := http.Header{}
+		headers.Set("X-Client-Secret", client.CLIENT_SECRET)
 
-		wsConn, response, err := websocket.DefaultDialer.Dial(wsURL, nil)
+		wsConn, response, err := websocket.DefaultDialer.Dial(wsURL, headers)
 		if err != nil {
 			if response != nil && response.StatusCode != http.StatusOK {
 				bodyBytes, _ := io.ReadAll(response.Body)
@@ -254,6 +286,25 @@ func connectToRoom(serverAddr, roomCode, playerName, mode string) tea.Cmd {
 }
 
 func main() {
+	// Set build-time configuration if available
+	if BuildServerURL != "" || BuildClientSecret != "" {
+		client.SetBuildTimeConfig(BuildServerURL, BuildClientSecret)
+	}
+	
+	// Show version info in dev mode
+	if client.DEV_MODE {
+		fmt.Printf("Planning Poker Client %s\n", BuildVersion)
+		fmt.Printf("Build: %s (%s)\n", BuildCommit, BuildDate)
+		fmt.Printf("Server: %s\n\n", client.SERVER_URL)
+	}
+	
+	// Validate configuration
+	if err := client.ValidateConfig(); err != nil {
+		fmt.Printf("Configuration error: %v\n", err)
+		fmt.Println("Please set CLIENT_SECRET environment variable or use a pre-built binary.")
+		os.Exit(1)
+	}
+	
 	// Create menu items
 	items := []list.Item{
 		menuItem("Create a new room (be the host)"),
@@ -277,7 +328,7 @@ func main() {
 		state:      menuMain,
 		list:       l,
 		textInput:  ti,
-		serverAddr: "http://localhost:8080",
+		serverAddr: client.SERVER_URL,
 	}
 
 	// Create program

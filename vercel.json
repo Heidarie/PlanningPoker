@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "api/server.go": {
+      "runtime": "go1.19"
+    }
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/server.go"
+    }
+  ],
+  "env": {
+    "CLIENT_SECRET": "@client_secret"
+  }
+}

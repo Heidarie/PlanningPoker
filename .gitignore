@@ -1,2 +1,8 @@
 cli_planning_poker.exe
+cli_planning_poker_pretty.exe
+planning_poker_secure*.exe
+planning_poker_secure*
 server.exe
+.vercel
+.env
+.env.dev
