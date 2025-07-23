@@ -286,7 +286,7 @@ func authenticateClient(r *http.Request) bool {
 	// Debug logging
 	log.Printf("Auth attempt - Expected length: %d, Received length: %d", len(expectedSecret), len(receivedSecret))
 	if len(expectedSecret) > 8 && len(receivedSecret) > 8 {
-		log.Printf("Expected prefix: %s..., Received prefix: %s...", expectedSecret[:8], receivedSecret[:8])
+		log.Printf("Expected prefix: %s..., Received prefix: %s...", expectedSecret, receivedSecret)
 	}
 	
 	return subtle.ConstantTimeCompare([]byte(receivedSecret), []byte(expectedSecret)) == 1
