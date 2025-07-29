@@ -29,7 +29,7 @@ func init() {
 	_ = godotenv.Load()
 
 	// Set default values
-	SERVER_URL = getEnv("SERVER_URL", "https://planning-poker-secure.vercel.app")
+	SERVER_URL = getEnv("SERVER_URL", "http://localhost:8080")
 	CLIENT_SECRET = getEnv("CLIENT_SECRET", "")
 	DEV_MODE = getEnv("DEV_MODE", "false") == "true"
 

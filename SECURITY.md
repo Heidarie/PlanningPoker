@@ -18,7 +18,7 @@
 
 ### 🚀 Deployment Pipeline
 - **GitHub Actions**: Automated builds for multiple platforms
-- **Vercel Integration**: Automatic serverless deployment on tag push
+- **DigitalOcean Integration**: Automatic server deployment via SSH
 - **Cross-platform Builds**: Windows, Linux, macOS (amd64, arm64)
 - **Secure Releases**: Pre-configured binaries with embedded secrets
 
@@ -37,7 +37,7 @@
 4. Build with `make build-secure` for embedded config
 
 ### For Deployment
-1. Configure Vercel environment variables
+1. Configure DigitalOcean droplet and environment variables
 2. Use GitHub Actions for automated releases
 3. Tag releases for version tracking
 4. Distribute only pre-built binaries with embedded secrets
@@ -50,38 +50,37 @@ PlanningPoker/
 ├── .env.dev             # Development configuration
 ├── .env                 # Local configuration (git-ignored)
 ├── .github/workflows/   # GitHub Actions for CI/CD
-├── api/server.go        # Vercel serverless handler
 ├── cmd/
 │   ├── client/main.go   # Client with build-time config support
 │   └── server/main.go   # Server entry point
 ├── internal/
 │   ├── client/config.go # Client configuration management
 │   └── server/server.go # Server with authentication & rate limiting
-└── vercel.json         # Vercel deployment configuration
+└── DIGITALOCEAN_SETUP.md # DigitalOcean deployment guide
 ```
 
 ## 🔑 Environment Variables
 
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|
-| `SERVER_URL` | WebSocket server endpoint | No | `https://planning-poker-secure.vercel.app` |
+| `SERVER_URL` | WebSocket server endpoint | No | `https://your-app.domain.com` |
 | `CLIENT_SECRET` | Authentication secret key | **Yes** | None |
 | `DEV_MODE` | Enable development features | No | `false` |
 
 ## 🎯 Next Steps
 
-1. **Setup Vercel Integration**:
+1. **Setup DigitalOcean Integration**:
    ```bash
-   # Get your Vercel credentials
-   vercel login
-   vercel link  # Link to your project
+   # Create your DigitalOcean droplet
+   # Configure SSH access and security
    ```
 
 2. **Configure GitHub Secrets**:
    - `CLIENT_SECRET`: Your production secret
-   - `SERVER_URL`: Your Vercel app URL (optional)
-   - `VERCEL_TOKEN`: From Vercel account settings
-   - `VERCEL_PROJECT_ID`: From Vercel project settings
+   - `DIGITALOCEAN_SERVER_URL`: Your domain or droplet IP
+   - `DIGITALOCEAN_ACCESS_TOKEN`: From DigitalOcean API settings
+   - `DIGITALOCEAN_DROPLET_IP`: Your droplet's IP address
+   - `SSH_PRIVATE_KEY`: For secure deployment access
 
 3. **Deploy Everything**:
    ```bash
@@ -90,7 +89,7 @@ PlanningPoker/
    ```
 
 4. **Automatic Process**:
-   - ✅ Server deploys to Vercel
+   - ✅ Server deploys to DigitalOcean via SSH
    - ✅ Client binaries build with embedded config
    - ✅ GitHub release created with downloads
    - ✅ Everything ready for users!
@@ -98,7 +97,7 @@ PlanningPoker/
 ## 🔒 Security Considerations
 
 - **Secret Rotation**: Change secrets periodically
-- **Access Logs**: Monitor Vercel logs for suspicious activity
+- **Access Logs**: Monitor DigitalOcean droplet logs for suspicious activity
 - **Rate Limits**: Adjust limits based on usage patterns
 - **HTTPS Only**: Ensure all production traffic uses HTTPS/WSS
 - **Binary Distribution**: Only distribute official GitHub releases

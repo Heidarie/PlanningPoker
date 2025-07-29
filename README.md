@@ -11,7 +11,7 @@ A beautiful, secure planning poker application with real-time collaboration for 
 - 👥 **Real-time Participant Tracking** - See who's joined and their voting status
 - 🔒 **Vote Locking** - Prevents vote changes after submission for fair estimation
 - 🧹 **Auto Cleanup** - Inactive rooms are automatically cleaned up after 10 minutes
-- ☁️ **Cloud Hosted** - Deployed on Vercel for global accessibility
+- 🌊 **Cloud Hosted** - Deployed on DigitalOcean for global accessibility
 
 ## 📥 Download
 
@@ -94,45 +94,46 @@ SERVER_URL=https://your-app.vercel.app CLIENT_SECRET=your-production-secret make
 SERVER_URL=https://your-app.vercel.app CLIENT_SECRET=your-production-secret make build-all
 ```
 
-### Deployment to Vercel
+### Deployment to DigitalOcean
 
-1. **Set up Vercel project**:
+1. **Set up DigitalOcean droplet**:
 ```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Login and deploy
-vercel
+# Create Ubuntu 22.04 LTS droplet
+# Configure firewall and SSH access
 ```
 
-2. **Set environment variables in Vercel**:
+2. **Set environment variables in GitHub Secrets**:
 ```bash
-vercel env add CLIENT_SECRET
-# Enter your secret key when prompted
-
-# Optional: Set custom server URL
-vercel env add SERVER_URL
+# Required secrets:
+DIGITALOCEAN_ACCESS_TOKEN=your_do_api_token
+DIGITALOCEAN_DROPLET_IP=your_droplet_ip
+DIGITALOCEAN_SERVER_URL=https://your-domain.com
+CLIENT_SECRET=your_production_secret
+SSH_PRIVATE_KEY=your_ssh_private_key
 ```
 
-3. **Configure GitHub Secrets** (for automated deployment & releases):
+3. **Configure automated deployment**:
    - Go to your repository settings → Secrets and variables → Actions
-   - Add `CLIENT_SECRET` with your production secret key
-   - Add `SERVER_URL` with your Vercel deployment URL (optional)
+   - Add all required secrets listed above
    
-   **For Vercel Auto-Deployment (Hobby Tier):**
-   - Add `VERCEL_TOKEN` (get from https://vercel.com/account/tokens)
+   **For DigitalOcean Auto-Deployment:**
+   - Get API token from DigitalOcean Console → API → Tokens
+   - Add your droplet's IP address
+   - Add your SSH private key for secure deployment
 
 4. **Deploy and build automatically**:
 ```bash
-# Push a tag to trigger automatic Vercel deployment + GitHub releases
+# Push a tag to trigger automatic DigitalOcean deployment + GitHub releases
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
 This will:
-- Deploy the server to Vercel with production settings
+- Deploy the server to your DigitalOcean droplet with production settings
 - Build secure client binaries for all platforms
 - Create a GitHub release with pre-configured binaries
+
+**For detailed setup instructions, see [DIGITALOCEAN_SETUP.md](DIGITALOCEAN_SETUP.md)**
 
 ### Building from Source
 

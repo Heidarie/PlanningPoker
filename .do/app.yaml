@@ -1,0 +1,21 @@
+name: planning-poker
+services:
+- build_command: go build -o bin/server ./cmd/server
+  environment_slug: go
+  github:
+    branch: main
+    deploy_on_push: true
+    repo: Heidarie/PlanningPoker
+  http_port: 8080
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  name: planning-poker-server
+  run_command: ./bin/server
+  source_dir: /
+  envs:
+  - key: CLIENT_SECRET
+    scope: RUN_TIME
+    type: SECRET
+  - key: PORT
+    scope: RUN_TIME
+    value: "8080"
