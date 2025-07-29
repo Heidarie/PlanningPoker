@@ -20,14 +20,14 @@ Download the latest release from the [Releases](../../releases) section.
 ### Windows
 ```powershell
 # Download the exe file and run directly
-./cli_planning_poker_secure.exe
+./planning_poker_secure.exe
 ```
 
 ### macOS/Linux
 ```bash
 # Download and make executable
 chmod +x cli_planning_poker_secure
-./cli_planning_poker_secure
+./planning_poker_secure
 ```
 
 ## 🎮 How to Use
@@ -105,11 +105,8 @@ SERVER_URL=https://your-app.vercel.app CLIENT_SECRET=your-production-secret make
 2. **Set environment variables in GitHub Secrets**:
 ```bash
 # Required secrets:
-DIGITALOCEAN_ACCESS_TOKEN=your_do_api_token
-DIGITALOCEAN_DROPLET_IP=your_droplet_ip
-DIGITALOCEAN_SERVER_URL=https://your-domain.com
+SERVER_URL=https://your-domain.com
 CLIENT_SECRET=your_production_secret
-SSH_PRIVATE_KEY=your_ssh_private_key
 ```
 
 3. **Configure automated deployment**:
@@ -153,7 +150,7 @@ Create a `.env` file in the project root:
 
 ```env
 # Server Configuration
-SERVER_URL=https://your-app.vercel.app
+SERVER_URL=https://your-app.app
 # For local development:
 # SERVER_URL=http://localhost:8080
 
