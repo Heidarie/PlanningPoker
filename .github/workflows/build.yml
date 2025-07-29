@@ -119,10 +119,10 @@ jobs:
         # Build with embedded configuration for tagged releases
         if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
           echo "Building with embedded CLIENT_SECRET for release"
-          go build -ldflags="-s -w -X 'github.com/yourusername/planning-poker/internal/client.BuildTimeServerURL=$SERVER_URL' -X 'github.com/yourusername/planning-poker/internal/client.BuildTimeClientSecret=$CLIENT_SECRET' -X 'github.com/yourusername/planning-poker/internal/client.BuildTimeVersion=$VERSION'" -o cli_planning_poker ./cmd/client
+          go build -ldflags="-s -w -X 'github.com/heidarie/planning-poker/internal/client.BuildTimeServerURL=$SERVER_URL' -X 'github.com/heidarie/planning-poker/internal/client.BuildTimeClientSecret=$CLIENT_SECRET' -X 'github.com/heidarie/planning-poker/internal/client.BuildTimeVersion=$VERSION'" -o cli_planning_poker ./cmd/client
         else
           echo "Building development version without embedded secrets"
-          go build -ldflags="-s -w -X 'github.com/yourusername/planning-poker/internal/client.BuildTimeServerURL=$SERVER_URL' -X 'github.com/yourusername/planning-poker/internal/client.BuildTimeVersion=$VERSION'" -o cli_planning_poker ./cmd/client
+          go build -ldflags="-s -w -X 'github.com/heidarie/planning-poker/internal/client.BuildTimeServerURL=$SERVER_URL' -X 'github.com/heidarie/planning-poker/internal/client.BuildTimeVersion=$VERSION'" -o cli_planning_poker ./cmd/client
         fi
         
         # Create platform-specific filename
