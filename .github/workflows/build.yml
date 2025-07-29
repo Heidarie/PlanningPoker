@@ -13,7 +13,7 @@ permissions:
   packages: write
 
 env:
-  SERVER_URL: ${{ secrets.DIGITALOCEAN_APP_URL || 'https://your-app.ondigitalocean.app' }}
+  SERVER_URL: ${{ secrets.SERVER_URL || 'https://your-app.ondigitalocean.app' }}
   CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
 
 jobs:
