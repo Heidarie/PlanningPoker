@@ -116,31 +116,31 @@ jobs:
         echo "Target: $GOOS/$GOARCH"
         echo "Server URL: $SERVER_URL"
         
-        # Build with embedded configuration for tagged releases
-        if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
-          echo "Building with embedded CLIENT_SECRET for release"
-          go build -ldflags="-s -w -X 'github.com/heidarie/planning-poker/internal/client.BuildTimeServerURL=$SERVER_URL' -X 'github.com/heidarie/planning-poker/internal/client.BuildTimeClientSecret=$CLIENT_SECRET' -X 'github.com/heidarie/planning-poker/internal/client.BuildTimeVersion=$VERSION'" -o cli_planning_poker ./cmd/client
+        # Create build-time configuration 
+        LDFLAGS="-s -w -X main.BuildServerURL=${SERVER_URL} -X main.BuildClientSecret=${CLIENT_SECRET} -X main.BuildVersion=${VERSION} -X main.BuildCommit=${COMMIT} -X main.BuildDate=${DATE}"
+        
+        echo "🔧 Building with configuration:"
+        echo "  Version: ${VERSION}"
+        echo "  Server URL: ${SERVER_URL}"
+        echo "  Client Secret: $(echo ${CLIENT_SECRET} | cut -c1-8)..."
+        echo "  Platform: ${{ matrix.goos }}/${{ matrix.goarch }}"
+        echo "  LDFLAGS: ${LDFLAGS}"
+        
+        echo "🏗️  Starting Go build..."
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          go build -ldflags="${LDFLAGS}" -o planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}.exe ./cmd/client
+          echo "✅ Built: planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}.exe"
         else
-          echo "Building development version without embedded secrets"
-          go build -ldflags="-s -w -X 'github.com/heidarie/planning-poker/internal/client.BuildTimeServerURL=$SERVER_URL' -X 'github.com/heidarie/planning-poker/internal/client.BuildTimeVersion=$VERSION'" -o cli_planning_poker ./cmd/client
+          go build -ldflags="${LDFLAGS}" -o planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }} ./cmd/client
+          echo "✅ Built: planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}"
         fi
         
-        # Create platform-specific filename
-        BINARY_NAME="cli_planning_poker"
-        if [ "$GOOS" = "windows" ]; then
-          BINARY_NAME="${BINARY_NAME}.exe"
+        # Verify the binary was created
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          ls -la planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}.exe
+        else
+          ls -la planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}
         fi
-        
-        # Rename binary with platform suffix
-        FINAL_NAME="cli_planning_poker_${GOOS}_${GOARCH}"
-        if [ "$GOOS" = "windows" ]; then
-          FINAL_NAME="${FINAL_NAME}.exe"
-        fi
-        
-        mv $BINARY_NAME $FINAL_NAME
-        
-        echo "✅ Built: $FINAL_NAME"
-        ls -la $FINAL_NAME
     
     - name: Upload client artifacts
       uses: actions/upload-artifact@v4
