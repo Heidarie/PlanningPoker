@@ -7,7 +7,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/gorilla/websocket"
-	"github.com/heidarie/cli_planning_poker/internal/server"
 )
 
 const (
@@ -80,7 +79,7 @@ func (m Model) Init() tea.Cmd {
 
 func listenForMessages(conn *websocket.Conn) tea.Cmd {
 	return func() tea.Msg {
-		var msg server.Message
+		var msg Message
 		err := conn.ReadJSON(&msg)
 		if err != nil {
 			return nil

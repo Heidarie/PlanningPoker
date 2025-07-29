@@ -6,13 +6,10 @@ import (
 	"log"
 
 	tea "github.com/charmbracelet/bubbletea" // TUI framework
-
-	// WebSocket
-	"github.com/heidarie/cli_planning_poker/internal/server" // message types
 )
 
 type wsMsg struct {
-	Msg server.Message
+	Msg Message
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -33,7 +30,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			// Only hosts can start voting sessions
 			if m.state == stateHost {
-				startMsg := server.Message{Type: "start"}
+				startMsg := Message{Type: "start"}
 				if err := m.Conn.WriteJSON(startMsg); err != nil {
 					log.Println("Failed to send start msg.")
 				}
@@ -44,7 +41,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					selected := m.list.SelectedItem()
 					vote := fmt.Sprintf("%v", selected)
 					payload, _ := json.Marshal(map[string]string{"value": vote})
-					voteMsg := server.Message{
+					voteMsg := Message{
 						Type:    "vote",
 						Sender:  m.name,
 						Payload: payload,
@@ -57,7 +54,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.state == stateResults {
 				// Only hosts can reset the game
 				if m.isHost {
-					resetMsg := server.Message{Type: "reset"}
+					resetMsg := Message{Type: "reset"}
 					if err := m.Conn.WriteJSON(resetMsg); err != nil {
 						log.Println("Failed to send reset msg.")
 					}
@@ -170,7 +167,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Continue listening for more messages
 		return m, func() tea.Cmd {
 			return func() tea.Msg {
-				var msg server.Message
+				var msg Message
 				err := m.Conn.ReadJSON(&msg)
 				if err != nil {
 					return nil

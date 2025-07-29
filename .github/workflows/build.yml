@@ -200,6 +200,8 @@ jobs:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
         CGO_ENABLED: 0
+        CLIENT_SECRET: ${{ env.CLIENT_SECRET }}
+        SERVER_URL: ${{ env.SERVER_URL }}
       run: |
         # Get version info
         if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then

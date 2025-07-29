@@ -283,10 +283,12 @@ func authenticateClient(r *http.Request) bool {
 	receivedSecret := r.Header.Get("X-Client-Secret")
 	expectedSecret := getSecretKey()
 
+	expectedSecret = expectedSecret[:len(expectedSecret)-1]
+
 	// Debug logging
 	log.Printf("Auth attempt - Expected length: %d, Received length: %d", len(expectedSecret), len(receivedSecret))
 	if len(expectedSecret) > 8 && len(receivedSecret) > 8 {
-		log.Printf("Expected prefix: %s..., Received prefix: %s...", expectedSecret[:8], receivedSecret[:8])
+		log.Printf("Expected prefix: %s..., Received prefix: %s...", expectedSecret[:3], receivedSecret[:3])
 	}
 
 	return subtle.ConstantTimeCompare([]byte(receivedSecret), []byte(expectedSecret)) == 1
