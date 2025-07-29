@@ -1,6 +1,6 @@
 module github.com/heidarie/cli_planning_poker
 
-go 1.24.4
+go 1.24.3
 
 require (
 	github.com/charmbracelet/bubbles v0.21.0

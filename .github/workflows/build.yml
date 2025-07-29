@@ -2,10 +2,10 @@ name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*'
-    branches:
-      - main
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -19,20 +19,20 @@ env:
 jobs:
   deploy-server:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.23'
-    
     - name: App Platform deployment info
       run: |
-        if [ -z "${{ secrets.CLIENT_SECRET }}" ]; then
-          echo "❌ ERROR: CLIENT_SECRET is required but not set in GitHub secrets"
-          echo "Please add CLIENT_SECRET to your GitHub repository secrets"
+        echo "🌊 DigitalOcean App Platform Deployment"
+        echo "======================================="
+        echo ""
+        echo "ℹ️  App Platform automatically deploys your server from this repository"
+        echo "📂 Server code: ./cmd/server/"
+        echo "⚙️  Configuration: ./.do/app.yaml"
+        echo ""
+        
+        if [ -z "${{ secrets.SERVER_URL }}" ]; then
+          echo "⚠️  DIGITALOCEAN_APP_URL secret is not set!"
+          echo "📝 Please set it to your App Platform app URL (e.g., https://your-app.ondigitalocean.app)"
           exit 1
         fi
         
@@ -47,116 +47,13 @@ jobs:
         echo "3. ✅ Set CLIENT_SECRET environment variable in App Platform"
         echo "4. ✅ Set DIGITALOCEAN_APP_URL secret in GitHub"
         echo "5. ✅ App Platform will auto-deploy on every push to main"
-    
-    - name: Build server binary
-      env:
-        CGO_ENABLED: 0
-        GOOS: linux
-        GOARCH: amd64
-      run: |
-        echo "🏗️  Building server binary for Linux..."
-        go mod download
-        go build -ldflags="-s -w" -o planning_poker_server ./cmd/server
-        chmod +x planning_poker_server
-        echo "✅ Server binary built successfully"
-    
-    - name: Create deployment package
-      run: |
-        echo "� Creating deployment package..."
-        
-        # Create systemd service file
-        cat > planning_poker.service << EOF
-        [Unit]
-        Description=Planning Poker Server
-        After=network.target
-        
-        [Service]
-        Type=simple
-        User=planning-poker
-        WorkingDirectory=/opt/planning-poker
-        ExecStart=/opt/planning-poker/planning_poker_server
-        Restart=always
-        RestartSec=5
-        Environment=CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}
-        Environment=PORT=8080
-        
-        [Install]
-        WantedBy=multi-user.target
-        EOF
-        
-        # Create deployment script
-        cat > deploy.sh << 'EOF'
-        #!/bin/bash
-        set -e
-        
-        echo "🚀 Starting Planning Poker deployment..."
-        
-        # Create user if doesn't exist
-        if ! id "planning-poker" &>/dev/null; then
-            sudo useradd -r -s /bin/false planning-poker
-            echo "✅ Created planning-poker user"
-        fi
-        
-        # Create directories
-        sudo mkdir -p /opt/planning-poker
-        sudo chown planning-poker:planning-poker /opt/planning-poker
-        
-        # Stop service if running
-        sudo systemctl stop planning-poker || true
-        
-        # Copy binary
-        sudo cp planning_poker_server /opt/planning-poker/
-        sudo chown planning-poker:planning-poker /opt/planning-poker/planning_poker_server
-        sudo chmod +x /opt/planning-poker/planning_poker_server
-        
-        # Install systemd service
-        sudo cp planning_poker.service /etc/systemd/system/
-        sudo systemctl daemon-reload
-        sudo systemctl enable planning-poker
-        sudo systemctl start planning-poker
-        
-        echo "✅ Planning Poker server deployed successfully!"
-        echo "🔍 Check status: sudo systemctl status planning-poker"
-        echo "📋 View logs: sudo journalctl -u planning-poker -f"
-        EOF
-        
-        chmod +x deploy.sh
-        echo "✅ Deployment package created"
-    
-    - name: Deploy to DigitalOcean (SSH)
-      if: ${{ secrets.DIGITALOCEAN_DROPLET_IP && secrets.SSH_PRIVATE_KEY }}
-      run: |
-        echo "🌊 Deploying to DigitalOcean via SSH..."
-        
-        # Setup SSH
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.DIGITALOCEAN_DROPLET_IP }} >> ~/.ssh/known_hosts
-        
-        # Copy files to server
-        scp planning_poker_server planning_poker.service deploy.sh root@${{ secrets.DIGITALOCEAN_DROPLET_IP }}:/tmp/
-        
-        # Run deployment script
-        ssh root@${{ secrets.DIGITALOCEAN_DROPLET_IP }} "cd /tmp && ./deploy.sh"
-        
-        echo "✅ Deployment completed successfully!"
-        echo "🌐 Server should be running at: ${{ env.SERVER_URL }}"
-    
-    - name: Upload deployment artifacts
-      if: ${{ !secrets.DIGITALOCEAN_DROPLET_IP || !secrets.SSH_PRIVATE_KEY }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: digitalocean-deployment-package
-        path: |
-          planning_poker_server
-          planning_poker.service
-          deploy.sh
+        echo ""
+        echo "📖 For detailed setup: See DIGITALOCEAN_APP_PLATFORM.md"
+        echo "🌐 App Platform handles server deployment automatically!"
+        echo "🎯 This workflow only builds client binaries with your App Platform URL"
 
   build-clients:
     runs-on: ubuntu-latest
-    needs: [deploy-server]
-    if: always()
     
     strategy:
       matrix:
@@ -171,10 +68,15 @@ jobs:
     
     - name: Workflow info
       run: |
-        echo "Trigger: ${{ github.event_name }}"
-        echo "Ref: ${{ github.ref }}"
-        echo "Is tag: ${{ startsWith(github.ref, 'refs/tags/') }}"
-        echo "Deploy job will run: ${{ startsWith(github.ref, 'refs/tags/') }}"
+        echo "🏗️  Building Planning Poker CLI client"
+        echo "OS: ${{ matrix.goos }}"
+        echo "Arch: ${{ matrix.goarch }}"
+        echo "Server URL: ${{ env.SERVER_URL }}"
+        if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
+          echo "Building release version with CLIENT_SECRET"
+        else
+          echo "Building development version"
+        fi
     
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -209,100 +111,100 @@ jobs:
         else
           VERSION="dev-${{ github.sha }}"
         fi
-        COMMIT=${GITHUB_SHA::8}
-        DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
         
-        # Set default values for development builds
-        SERVER_URL="${{ env.SERVER_URL }}"
-        CLIENT_SECRET="${{ env.CLIENT_SECRET }}"
+        echo "Building version: $VERSION"
+        echo "Target: $GOOS/$GOARCH"
+        echo "Server URL: $SERVER_URL"
         
-        if [ -z "$CLIENT_SECRET" ]; then
-          echo "❌ ERROR: CLIENT_SECRET is required for production builds"
-          echo "Please add CLIENT_SECRET to your GitHub repository secrets"
-          exit 1
+        # Build with embedded configuration for tagged releases
+        if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
+          echo "Building with embedded CLIENT_SECRET for release"
+          go build -ldflags="-s -w -X 'github.com/yourusername/planning-poker/internal/client.BuildTimeServerURL=$SERVER_URL' -X 'github.com/yourusername/planning-poker/internal/client.BuildTimeClientSecret=$CLIENT_SECRET' -X 'github.com/yourusername/planning-poker/internal/client.BuildTimeVersion=$VERSION'" -o cli_planning_poker ./cmd/client
         else
-          echo "✅ CLIENT_SECRET is configured for production build"
+          echo "Building development version without embedded secrets"
+          go build -ldflags="-s -w -X 'github.com/yourusername/planning-poker/internal/client.BuildTimeServerURL=$SERVER_URL' -X 'github.com/yourusername/planning-poker/internal/client.BuildTimeVersion=$VERSION'" -o cli_planning_poker ./cmd/client
         fi
         
-        if [ -z "$SERVER_URL" ]; then
-          SERVER_URL="http://localhost:8080"
-          echo "⚠️  Using development SERVER_URL"
+        # Create platform-specific filename
+        BINARY_NAME="cli_planning_poker"
+        if [ "$GOOS" = "windows" ]; then
+          BINARY_NAME="${BINARY_NAME}.exe"
         fi
         
-        # Create build-time configuration  
-        LDFLAGS="-s -w -X main.BuildServerURL=${SERVER_URL} -X main.BuildClientSecret=${CLIENT_SECRET} -X main.BuildVersion=${VERSION} -X main.BuildCommit=${COMMIT} -X main.BuildDate=${DATE}"
-        
-        echo "🔧 Building with configuration:"
-        echo "  Version: ${VERSION}"
-        echo "  Server URL: ${SERVER_URL}"
-        echo "  Client Secret: $(echo ${CLIENT_SECRET} | cut -c1-8)..."
-        echo "  Platform: ${{ matrix.goos }}/${{ matrix.goarch }}"
-        echo "  LDFLAGS: ${LDFLAGS}"
-        
-        echo "🏗️  Starting Go build..."
-        if [ "${{ matrix.goos }}" = "windows" ]; then
-          go build -ldflags="${LDFLAGS}" -o planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}.exe ./cmd/client
-          echo "✅ Built: planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}.exe"
-        else
-          go build -ldflags="${LDFLAGS}" -o planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }} ./cmd/client
-          echo "✅ Built: planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}"
+        # Rename binary with platform suffix
+        FINAL_NAME="cli_planning_poker_${GOOS}_${GOARCH}"
+        if [ "$GOOS" = "windows" ]; then
+          FINAL_NAME="${FINAL_NAME}.exe"
         fi
         
-        # Verify the binary was created
-        if [ "${{ matrix.goos }}" = "windows" ]; then
-          ls -la planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}.exe
-        else
-          ls -la planning_poker_secure_${{ matrix.goos }}_${{ matrix.goarch }}
-        fi
+        mv $BINARY_NAME $FINAL_NAME
+        
+        echo "✅ Built: $FINAL_NAME"
+        ls -la $FINAL_NAME
     
-    - name: Upload artifacts
+    - name: Upload client artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: planning_poker_${{ matrix.goos }}_${{ matrix.goarch }}
-        path: planning_poker_secure_*
+        name: client-${{ matrix.goos }}-${{ matrix.goarch }}
+        path: cli_planning_poker_${{ matrix.goos }}_${{ matrix.goarch }}*
+        retention-days: 30
 
   release:
+    if: startsWith(github.ref, 'refs/tags/')
     needs: build-clients
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
     
     steps:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
+      with:
+        merge-multiple: true
+    
+    - name: Display downloaded files
+      run: ls -la
     
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: |
-          **/planning_poker_secure_*
+          cli_planning_poker_*
+        draft: false
+        prerelease: ${{ contains(github.ref, '-') }}
+        generate_release_notes: true
         body: |
-          ## 🚀 Planning Poker - Secure Release
+          ## Planning Poker CLI Release
           
-          ### What's New
-          - ✨ Beautiful TUI interface with modern styling
-          - 🔐 Secure authentication system
-          - 🛡️ DDoS protection and rate limiting
-          - 🏠 Host-only game controls
-          - 👥 Real-time participant tracking
-          - 🔒 Vote locking system
-          - 🧹 Automatic room cleanup
-          - 🌊 **Server automatically deployed to DigitalOcean**
+          ### 🚀 DigitalOcean App Platform Deployment
           
-          ### Download Instructions
-          1. Download the appropriate binary for your system
-          2. Make it executable (Linux/macOS): `chmod +x planning_poker_secure_*`
-          3. Run the application: `./planning_poker_secure_*`
+          This release includes pre-configured clients for DigitalOcean App Platform deployment.
           
-          **Note**: This release has the server URL and authentication pre-configured.
-          The server is automatically deployed to DigitalOcean and ready to use!
+          ### 📦 Downloads
           
-          ### Supported Platforms
-          - Windows (amd64)
-          - Linux (amd64, arm64)
-          - macOS (amd64, arm64)
+          Choose the appropriate binary for your platform:
           
-          ### Security
-          This release includes authentication and rate limiting for secure usage.
-          Server deployed with production security settings on DigitalOcean.
+          - **Windows (64-bit)**: `cli_planning_poker_windows_amd64.exe`
+          - **Linux (64-bit)**: `cli_planning_poker_linux_amd64`
+          - **Linux (ARM64)**: `cli_planning_poker_linux_arm64`
+          - **macOS (Intel)**: `cli_planning_poker_darwin_amd64`
+          - **macOS (Apple Silicon)**: `cli_planning_poker_darwin_arm64`
+          
+          ### ⚙️ Configuration
+          
+          These binaries are pre-configured with:
+          - **Server URL**: ${{ env.SERVER_URL }}
+          - **Authentication**: Embedded client secret (secure)
+          
+          ### 🏃‍♂️ Usage
+          
+          1. Download the appropriate binary for your platform
+          2. Make it executable (Linux/macOS): `chmod +x cli_planning_poker_*`
+          3. Run: `./cli_planning_poker_*` (or double-click on Windows)
+          
+          ### 📖 Documentation
+          
+          - [Setup Guide](DIGITALOCEAN_APP_PLATFORM.md)
+          - [Migration from Vercel](MIGRATION_GUIDE.md)
+          
+          The server is automatically deployed to DigitalOcean App Platform from this repository.
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
